@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my_post">
+	<!-- 최신순 게시글 명단 출력 -->
+	<select id="list" resultType="my_page.dto.MyPostDTO">
+		select * 
+		from (
+			select A.*, rownum as rn
+			from (
+				select p.num, p.userid, m.name, p.subject, p.content, p.reg_date, p.readcount, p.ip, p.filename, p.filesize, p.downcount, p.recommendcount, p.edited
+				,(select count(*) from post_comment where post_num=p.num) commentcount
+				from mypage_post p, mypage_member m
+				where p.userid=m.userid
+				order by p.num desc) A
+			) where rn between #{start} and #{end}
+	</select>
+	
+	<!-- 게시글 명단 출력 -->
+	<select id="listForAdmin" resultType="my_page.dto.MyPostDTO">
+		select * from mypage_post
+		order by num
+	</select>
+	
+	<!-- 검색 결과 -->
+	<select id="searchList" resultType="my_page.dto.MyPostDTO">
+		select * 
+		from (
+			select A.*, rownum as rn
+			from (
+				select p.num, p.userid, m.name, p.subject, p.content, p.reg_date, p.readcount, p.ip, p.filename, p.filesize, p.downcount, p.recommendcount, p.edited
+				,(select count(*) from post_comment where post_num=p.num) commentcount
+				from mypage_post p, mypage_member m
+				where p.userid=m.userid
+				and subject like #{keyword}
+				order by ${array}) A
+			) where rn between #{start} and #{end}
+	</select>
+	
+	<!-- 게시물개수 -->
+	<select id="count" resultType="int">
+		select count(*) from mypage_post
+	</select>
+	
+	<!-- 조회수 증가 처리 -->
+	<update id="plusReadCount">
+		update mypage_post set readcount=readcount+1
+		where num=#{num}
+	</update>
+	
+	<!-- 게시물 상세 정보 -->
+	<select id="view" resultType="my_page.dto.MyPostDTO">
+		select p.num, p.userid, m.name, p.subject, p.content, p.reg_date, p.readcount, p.ip, p.filename, p.filesize, p.downcount, p.recommendcount, p.edited
+		from mypage_post p, mypage_member m
+		where p.userid=m.userid and num=#{num}
+	</select>
+	
+	<!-- 파일 이름 -->
+	<select id="getFileName" resultType="String">
+		select filename from mypage_post
+		from mypage_post
+		where num=#{num}
+	</select>
+	
+	<!-- 파일 다운로드 수 -->
+	<update id="plusDown">
+		update mypage_post set downcount=downcount+1 where num=#{num}
+	</update>
+	
+	<!-- 추천수 증가 처리 -->
+	<update id="plusRecommendCount">
+		update mypage_post set recommendcount=recommendcount+1
+		where num=#{num}
+	</update>
+	
+	<!-- 게시글쓰기 -->
+	<insert id="insert">
+		insert into mypage_post
+		(num, userid, subject, content, ip, filename, filesize)
+		values
+		( (select nvl(max(num)+1,1) from mypage_post)
+		, #{userid}, #{subject}, #{content}, #{ip}, #{filename}, #{filesize})
+	</insert>
+	
+	<!-- 게시물 수정 -->
+	<update id="update">
+		update mypage_post
+		set subject=#{subject}, content=#{content}, reg_date=sysdate, edited='Y'
+		where num=#{num}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="delete">
+		delete from mypage_post
+		where num=#{num}
+	</delete>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="deleteForMember">
+		delete from mypage_post
+		where userid=#{userid}
+	</delete>
+	
+	<select id="searchCount" resultType="int">
+		select count(*) from mypage_post
+		where subject like #{keyword}
+	</select>
+</mapper>

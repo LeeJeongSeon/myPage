@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="post_comment">
+	<!-- 댓글 목록 -->
+	<select id="commentList" resultType="my_page.dto.PostCommentDTO">
+		select p.num, p.post_num, p.userid, m.name, p.content, p.reg_date, p.edited
+		from post_comment p, mypage_member m
+		where p.userid=m.userid and post_num=#{post_num}
+		order by num desc
+	</select>
+	
+	<!-- 댓글 목록전체 -->
+	<select id="listForAdmin" resultType="my_page.dto.PostCommentDTO">
+		select p.num, p.post_num, p.userid, m.name, p.content, p.reg_date, p.edited
+		from post_comment p, mypage_member m
+		where p.userid=m.userid
+	</select>
+	
+	<!-- 댓글 쓰기 -->
+	<insert id="commentAdd">
+		insert into post_comment 
+		(num, userid, content, post_num) 
+		values 
+		( ( select nvl(max(num)+1,1) from post_comment ) 
+		, #{userid}, #{content}, #{post_num} )
+	</insert>
+	
+	<!-- 댓글 삭제 -->
+	<delete id="delete">
+		delete from post_comment
+		where num=#{num}
+	</delete>
+	
+	<!-- 게시글 삭제로 인한 댓글 삭제 -->
+	<delete id="deleteForPost">
+		delete from post_comment 
+		where post_num=#{post_num}
+	</delete>
+
+	<!-- 회원 삭제로 인한 댓글 삭제 -->
+	<delete id="deleteForMember">
+		delete from post_comment
+		where userid=#{userid} or post_num=(select num from mypage_post where userid=#{userid})
+	</delete>
+	
+</mapper>

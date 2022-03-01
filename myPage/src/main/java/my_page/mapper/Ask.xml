@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ask">
+	<!-- 문의하기 -->
+	<insert id="insert">
+		insert into ask (num, userid, subject, content, target)
+		values ( seq_ask.nextval , #{userid}, #{subject}, #{content}, #{target} )
+	</insert>
+	
+	<!-- 문의 목록 가져오기 -->
+	<select id="list" resultType="my_page.dto.AskDTO">
+		select * from ask
+		order by num
+	</select>
+	
+	<!-- 회원 탈퇴 시 문의 보존을 위해 삭제하지 않고 아이디만 변경 -->
+	<update id="updateForMember">
+		update ask
+		set userid = #{newUserid}
+		where userid = #{userid}
+	</update>
+</mapper>
